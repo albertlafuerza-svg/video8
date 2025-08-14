@@ -24,6 +24,8 @@ export interface OrderData {
   subtotal: number;
   transferFee: number;
   total: number;
+  cashTotal?: number;
+  transferTotal?: number;
 }
 
 // Datos completos de Cuba con provincias, municipios y barrios
@@ -278,14 +280,12 @@ const santiagoCosts = {
 export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutModalProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
-    idCard: '',
-    email: '',
     phone: '',
     address: ''
   });
   
-  const [selectedProvince, setSelectedProvince] = useState('');
-  const [selectedMunicipality, setSelectedMunicipality] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('Santiago de Cuba');
+  const [selectedMunicipality, setSelectedMunicipality] = useState('Santiago de Cuba');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('');
   const [deliveryCost, setDeliveryCost] = useState(0);
   const [showNonSantiagoAlert, setShowNonSantiagoAlert] = useState(false);
@@ -396,46 +396,46 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
 
   if (!isOpen) return null;
 
-  const municipalities = selectedProvince ? Object.keys(cubaLocations[selectedProvince as keyof typeof cubaLocations] || {}) : [];
+  const municipalities = selectedProvince ? Object.keys(cubaLocations[selectedProvince as keyof typeof cubaLocations] || {}) : ['Santiago de Cuba'];
   const neighborhoods = selectedMunicipality && selectedProvince 
     ? cubaLocations[selectedProvince as keyof typeof cubaLocations]?.[selectedMunicipality] || []
     : [];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto shadow-2xl mx-2 sm:mx-0">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white rounded-t-2xl">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 sm:p-6 text-white rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold flex items-center">
-                <CreditCard className="mr-3 h-7 w-7" />
+              <h2 className="text-xl sm:text-2xl font-bold flex items-center">
+                <CreditCard className="mr-2 sm:mr-3 h-6 w-6 sm:h-7 sm:w-7" />
                 Finalizar Pedido
               </h2>
-              <p className="text-blue-100 mt-1">Complete sus datos para procesar el pedido</p>
+              <p className="text-blue-100 mt-1 text-sm sm:text-base">Complete sus datos para procesar el pedido</p>
             </div>
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all"
+              className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all touch-manipulation"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* ID de Orden */}
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-green-800 flex items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 space-y-2 sm:space-y-0">
+              <h3 className="font-semibold text-green-800 flex items-center justify-center sm:justify-start">
                 <span className="mr-2">🎫</span>
                 ID de Orden
               </h3>
-              <div className="flex space-x-2">
+              <div className="flex justify-center sm:justify-end space-x-2">
                 <button
                   type="button"
                   onClick={copyOrderId}
-                  className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
+                  className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors touch-manipulation"
                   title="Copiar ID"
                 >
                   <Copy className="h-4 w-4" />
@@ -443,7 +443,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                 <button
                   type="button"
                   onClick={regenerateOrderId}
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors touch-manipulation"
                   title="Regenerar ID"
                 >
                   <RefreshCw className="h-4 w-4" />
@@ -451,7 +451,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
               </div>
             </div>
             <div className="bg-white rounded-lg p-3 border border-green-300">
-              <code className="text-green-700 font-mono text-sm break-all">{orderId}</code>
+              <code className="text-green-700 font-mono text-xs sm:text-sm break-all">{orderId}</code>
             </div>
             {showOrderCopied && (
               <div className="mt-2 flex items-center text-green-600 text-sm">
@@ -463,12 +463,12 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
 
           {/* Información Personal */}
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-center sm:justify-start">
               <User className="mr-2 h-5 w-5 text-blue-600" />
               Información Personal
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nombre Completo *
@@ -478,23 +478,11 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                   required
                   value={customerInfo.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                   placeholder="Ingrese su nombre completo"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Carnet de Identidad
-                </label>
-                <input
-                  type="text"
-                  value={customerInfo.idCard || ''}
-                  onChange={(e) => handleInputChange('idCard', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="Ej: 12345678901"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -506,25 +494,11 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                   required
                   value={customerInfo.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                   placeholder="Ej: +53 5X XXX XXXX"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Correo Electrónico *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={customerInfo.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="ejemplo@correo.com"
-                />
-              </div>
-            </div>
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -535,7 +509,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                 required
                 value={customerInfo.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-base"
                 rows={3}
                 placeholder="Ingrese su dirección completa con referencias"
               />
@@ -544,12 +518,12 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
 
           {/* Zona de Entrega */}
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-center sm:justify-start">
               <MapPin className="mr-2 h-5 w-5 text-green-600" />
               Zona de Entrega
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Provincia */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -559,9 +533,9 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                   required
                   value={selectedProvince}
                   onChange={(e) => handleProvinceChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                  disabled
                 >
-                  <option value="">Seleccionar provincia</option>
                   {Object.keys(cubaLocations).map((province) => (
                     <option key={province} value={province}>
                       {province}
@@ -579,10 +553,9 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                   required
                   value={selectedMunicipality}
                   onChange={(e) => handleMunicipalityChange(e.target.value)}
-                  disabled={!selectedProvince}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                 >
-                  <option value="">Seleccionar municipio</option>
                   {municipalities.map((municipality) => (
                     <option key={municipality} value={municipality}>
                       {municipality}
@@ -601,7 +574,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
                   value={selectedNeighborhood}
                   onChange={(e) => handleNeighborhoodChange(e.target.value)}
                   disabled={!selectedMunicipality}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed text-base"
                 >
                   <option value="">Seleccionar barrio</option>
                   {neighborhoods.map((neighborhood) => (
@@ -616,7 +589,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
             {/* Costo de entrega */}
             {selectedNeighborhood && !showNonSantiagoAlert && (
               <div className="mt-4 bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
                   <span className="text-green-700 font-medium">Costo de entrega:</span>
                   <span className="text-2xl font-bold text-green-800">${deliveryCost} CUP</span>
                 </div>
@@ -654,18 +627,18 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
           </div>
 
           {/* Botones de acción */}
-          <div className="flex gap-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium touch-manipulation"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isProcessing || showNonSantiagoAlert}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center touch-manipulation"
             >
               {isProcessing ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -678,7 +651,7 @@ export default function CheckoutModal({ isOpen, onClose, onConfirm }: CheckoutMo
 
           {/* Información adicional */}
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <p className="text-sm text-blue-700 text-center flex items-center justify-center">
+            <p className="text-sm text-blue-700 text-center flex items-center justify-center flex-wrap">
               <span className="mr-2">🔒</span>
               Sus datos están seguros y solo se utilizarán para procesar su pedido
             </p>
