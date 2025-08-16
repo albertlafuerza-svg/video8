@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Trash2, Star, Calendar, MessageCircle, ArrowLeft, Edit3, Tv, DollarSign, CreditCard, Calculator } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { PriceCard } from '../components/PriceCard';
-import CheckoutModal, { OrderData, CustomerInfo } from '../components/CheckoutModal';
+import { CheckoutModal, OrderData, CustomerInfo } from '../components/CheckoutModal';
 import { sendOrderToWhatsApp } from '../utils/whatsapp';
 import { IMAGE_BASE_URL, POSTER_SIZE } from '../config/api';
 
@@ -476,7 +476,14 @@ export function Cart() {
         <CheckoutModal
           isOpen={showCheckoutModal}
           onClose={() => setShowCheckoutModal(false)}
-          onConfirm={handleCheckout}
+          onCheckout={handleCheckout}
+          items={state.items.map(item => ({
+            id: item.id,
+            title: item.title,
+            price: calculateItemPrice(item),
+            quantity: 1
+          }))}
+          total={totalPrice}
         />
       </div>
     </div>
