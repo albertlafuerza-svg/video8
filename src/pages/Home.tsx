@@ -150,7 +150,7 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-6">
             Descubre el Mundo del
-            <span className="animated-gradient-text-purple">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-400">
               {' '}Entretenimiento
             </span>
           </h1>
@@ -174,7 +174,7 @@ export function Home() {
             </Link>
             <button
               onClick={() => setShowNovelasModal(true)}
-              className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center text-white"
+              className="bg-pink-600 hover:bg-pink-700 px-8 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center"
             >
               <BookOpen className="mr-2 h-5 w-5" />
               Catálogo de Novelas
