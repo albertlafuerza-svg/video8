@@ -170,7 +170,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   const handleExportSystemFiles = () => {
     exportSystemFiles();
-    displayLocalNotification('Archivos del sistema exportados con configuración actual aplicada', 'success');
+    displayLocalNotification('Archivos del sistema exportados correctamente en carpetas organizadas', 'success');
   };
 
   const filteredNovelas = state.config.novelas.filter(novela =>
