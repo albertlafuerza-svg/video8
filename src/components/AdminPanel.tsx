@@ -13,10 +13,10 @@ interface AdminPanelProps {
 
 export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   // Configuración actual aplicada: {
-  "moviePrice": 80,
-  "seriesPrice": 300,
-  "transferFeePercentage": 10
-}
+  // "moviePrice": 80,
+  // "seriesPrice": 300,
+  // "transferFeePercentage": 10
+  // }
   // Total de novelas: 10
   // Zonas de entrega activas: 23
   
