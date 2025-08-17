@@ -661,7 +661,106 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     isAuthenticated: false
   });
 
-  // ... resto de la implementación con configuración actual aplicada
+  // Load authentication state from localStorage on mount
+  useEffect(() => {
+    const isAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
+    if (isAuthenticated) {
+      dispatch({ type: 'LOG_IN' });
+    }
+  }, []);
+
+  const login = (username: string, password: string): boolean => {
+    // Basic hardcoded authentication - replace with real authentication
+    if (username === 'admin' && password === 'admin') {
+      localStorage.setItem('admin_authenticated', 'true');
+      dispatch({ type: 'LOG_IN' });
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('admin_authenticated');
+    dispatch({ type: 'LOG_OUT' });
+  };
+
+  const addNovela = (novela: Omit<NovelasConfig, 'id'>) => {
+    const newId = Math.max(...state.config.novelas.map(n => n.id)) + 1;
+    const newNovela = { ...novela, id: newId };
+    dispatch({ type: 'ADD_NOVELA', payload: newNovela });
+  };
+
+  const updateNovela = (id: number, updates: Partial<NovelasConfig>) => {
+    const existingNovela = state.config.novelas.find(n => n.id === id);
+    if (existingNovela) {
+      const updatedNovela = { ...existingNovela, ...updates };
+      dispatch({ type: 'UPDATE_NOVELA', payload: updatedNovela });
+    }
+  };
+
+  const deleteNovela = (id: number) => {
+    dispatch({ type: 'DELETE_NOVELA', payload: id });
+  };
+
+  const addDeliveryZone = (zone: Omit<DeliveryZoneConfig, 'id'>) => {
+    const newId = Math.max(...state.config.deliveryZones.map(z => z.id)) + 1;
+    const newZone = { ...zone, id: newId };
+    dispatch({ type: 'ADD_DELIVERY_ZONE', payload: newZone });
+  };
+
+  const updateDeliveryZone = (id: number, updates: Partial<DeliveryZoneConfig>) => {
+    const existingZone = state.config.deliveryZones.find(z => z.id === id);
+    if (existingZone) {
+      const updatedZone = { ...existingZone, ...updates };
+      dispatch({ type: 'UPDATE_DELIVERY_ZONE', payload: updatedZone });
+    }
+  };
+
+  const deleteDeliveryZone = (id: number) => {
+    dispatch({ type: 'DELETE_DELIVERY_ZONE', payload: id });
+  };
+
+  const exportConfig = (): string => {
+    return JSON.stringify(state.config, null, 2);
+  };
+
+  const importConfig = (configData: string): boolean => {
+    try {
+      const config = JSON.parse(configData);
+      dispatch({ type: 'LOAD_CONFIG', payload: config });
+      return true;
+    } catch (error) {
+      console.error('Error importing config:', error);
+      return false;
+    }
+  };
+
+  const resetToDefaults = () => {
+    dispatch({ type: 'LOAD_CONFIG', payload: defaultConfig });
+  };
+
+  const showNotification = (message: string, type: 'success' | 'info' | 'warning' | 'error') => {
+    // Temporary implementation - replace with actual notification system
+    console.log(`[${type.toUpperCase()}] ${message}`);
+  };
+
+  const exportSystemFiles = () => {
+    // Generate and download system files
+    const configContent = `// Archivo generado automáticamente el ${new Date().toISOString()}
+// AdminContext con configuración actual aplicada
+
+export const currentConfig = ${JSON.stringify(state.config, null, 2)};`;
+    
+    const blob = new Blob([configContent], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'admin-config.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   
   return (
     <AdminContext.Provider value={{ 
