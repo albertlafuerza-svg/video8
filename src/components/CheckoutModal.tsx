@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, MapPin, Phone, Copy, Check, MessageCircle, Calculator, DollarSign, CreditCard } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
 
 export interface CustomerInfo {
   fullName: string;
@@ -57,6 +58,7 @@ const DELIVERY_ZONES = {
 };
 
 export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: CheckoutModalProps) {
+  const adminContext = React.useContext(require('../context/AdminContext').AdminContext);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
     phone: '',
@@ -69,7 +71,16 @@ export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: Che
   const [generatedOrder, setGeneratedOrder] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const deliveryCost = DELIVERY_ZONES[deliveryZone as keyof typeof DELIVERY_ZONES] || 0;
+  // Get delivery zones from admin context if available
+  const adminZones = adminContext?.state?.deliveryZones || [];
+  const adminZonesMap = adminZones.reduce((acc, zone) => {
+    acc[zone.name] = zone.cost;
+    return acc;
+  }, {} as { [key: string]: number });
+  
+  // Combine admin zones with default zones
+  const allZones = { ...DELIVERY_ZONES, ...adminZonesMap };
+  const deliveryCost = allZones[deliveryZone as keyof typeof allZones] || 0;
   const finalTotal = total + deliveryCost;
 
   // Validar si todos los campos requeridos están completos incluyendo la zona de entrega
@@ -385,7 +396,7 @@ export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: Che
                           : 'border-gray-300 focus:ring-green-500'
                       }`}
                     >
-                      {Object.entries(DELIVERY_ZONES).map(([zone, cost]) => (
+                      {Object.entries(allZones).map(([zone, cost]) => (
                         <option key={zone} value={zone}>
                           {zone === 'Por favor seleccionar su Barrio/Zona' 
                             ? zone 

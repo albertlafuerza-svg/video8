@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Toast } from '../components/Toast';
+import { useAdmin } from './AdminContext';
 import type { CartItem } from '../types/movie';
 
 interface SeriesCartItem extends CartItem {
@@ -89,6 +90,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
+  const adminContext = React.useContext(require('./AdminContext').AdminContext);
   const [toast, setToast] = React.useState<{
     message: string;
     type: 'success' | 'error';
@@ -208,14 +210,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                    (item.genre_ids && item.genre_ids.includes(16)) ||
                    item.title?.toLowerCase().includes('anime');
     
+    // Get prices from admin context if available
+    const moviePrice = adminContext?.state?.prices?.moviePrice || 80;
+    const seriesPrice = adminContext?.state?.prices?.seriesPrice || 300;
+    const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
+    
     if (item.type === 'movie') {
-      const basePrice = isAnime ? 80 : 80; // Películas y animados: $80 CUP
-      return item.paymentType === 'transfer' ? Math.round(basePrice * 1.1) : basePrice;
+      const basePrice = moviePrice;
+      return item.paymentType === 'transfer' ? Math.round(basePrice * (1 + transferFeePercentage / 100)) : basePrice;
     } else {
-      // Series: $300 CUP por temporada
+      // Series: precio dinámico por temporada
       const seasons = item.selectedSeasons?.length || 1;
-      const basePrice = seasons * 300;
-      return item.paymentType === 'transfer' ? Math.round(basePrice * 1.1) : basePrice;
+      const basePrice = seasons * seriesPrice;
+      return item.paymentType === 'transfer' ? Math.round(basePrice * (1 + transferFeePercentage / 100)) : basePrice;
     }
   };
 
@@ -226,10 +233,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const calculateTotalByPaymentType = (): { cash: number; transfer: number } => {
+    const moviePrice = adminContext?.state?.prices?.moviePrice || 80;
+    const seriesPrice = adminContext?.state?.prices?.seriesPrice || 300;
+    const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
+    
     return state.items.reduce((totals, item) => {
-      const basePrice = item.type === 'movie' ? 80 : (item.selectedSeasons?.length || 1) * 300;
+      const basePrice = item.type === 'movie' ? moviePrice : (item.selectedSeasons?.length || 1) * seriesPrice;
       if (item.paymentType === 'transfer') {
-        totals.transfer += Math.round(basePrice * 1.1);
+        totals.transfer += Math.round(basePrice * (1 + transferFeePercentage / 100));
       } else {
         totals.cash += basePrice;
       }
