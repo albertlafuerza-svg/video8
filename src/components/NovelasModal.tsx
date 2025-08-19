@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, MessageCircle, Phone, BookOpen, Info, Check, DollarSign, CreditCard, Calculator, Search, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
 
 interface Novela {
   id: number;
@@ -17,6 +18,7 @@ interface NovelasModalProps {
 }
 
 export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
+  const adminContext = React.useContext(require('../context/AdminContext').AdminContext);
   const [selectedNovelas, setSelectedNovelas] = useState<number[]>([]);
   const [novelasWithPayment, setNovelasWithPayment] = useState<Novela[]>([]);
   const [showContactOptions, setShowContactOptions] = useState(false);
@@ -27,8 +29,12 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
   const [sortBy, setSortBy] = useState<'titulo' | 'año' | 'capitulos'>('titulo');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+  // Get novels and prices from admin context if available
+  const adminNovels = adminContext?.state?.novels || [];
+  const novelPricePerChapter = adminContext?.state?.prices?.novelPricePerChapter || 5;
+  
   // Lista de novelas basada en el documento
-  const novelas: Novela[] = [
+  const defaultNovelas: Novela[] = [
     { id: 1, titulo: "Corazón Salvaje", genero: "Drama/Romance", capitulos: 185, año: 2009 },
     { id: 2, titulo: "La Usurpadora", genero: "Drama/Melodrama", capitulos: 98, año: 1998 },
     { id: 3, titulo: "María la del Barrio", genero: "Drama/Romance", capitulos: 73, año: 1995 },
@@ -81,13 +87,23 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
     { id: 50, titulo: "La Herencia", genero: "Drama/Romance", capitulos: 74, año: 2022 }
   ];
 
+  // Combine admin novels with default novels
+  const allNovelas = [...defaultNovelas, ...adminNovels.map(novel => ({
+    id: novel.id,
+    titulo: novel.titulo,
+    genero: novel.genero,
+    capitulos: novel.capitulos,
+    año: novel.año,
+    descripcion: novel.descripcion
+  }))];
+
   const phoneNumber = '+5354690878';
 
   // Obtener géneros únicos
-  const uniqueGenres = [...new Set(novelas.map(novela => novela.genero))].sort();
+  const uniqueGenres = [...new Set(allNovelas.map(novela => novela.genero))].sort();
   
   // Obtener años únicos
-  const uniqueYears = [...new Set(novelas.map(novela => novela.año))].sort((a, b) => b - a);
+  const uniqueYears = [...new Set(allNovelas.map(novela => novela.año))].sort((a, b) => b - a);
 
   // Función para filtrar novelas
   const getFilteredNovelas = () => {
@@ -125,12 +141,12 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
 
   // Inicializar novelas con tipo de pago por defecto
   useEffect(() => {
-    const novelasWithDefaultPayment = novelas.map(novela => ({
+    const novelasWithDefaultPayment = allNovelas.map(novela => ({
       ...novela,
       paymentType: 'cash' as const
     }));
     setNovelasWithPayment(novelasWithDefaultPayment);
-  }, []);
+  }, [adminNovels]);
 
   const handleNovelToggle = (novelaId: number) => {
     setSelectedNovelas(prev => {
@@ -153,7 +169,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
   };
 
   const selectAllNovelas = () => {
-    setSelectedNovelas(novelas.map(n => n.id));
+    setSelectedNovelas(allNovelas.map(n => n.id));
   };
 
   const clearAllNovelas = () => {
@@ -175,8 +191,8 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
     const cashNovelas = selectedNovelasData.filter(n => n.paymentType === 'cash');
     const transferNovelas = selectedNovelasData.filter(n => n.paymentType === 'transfer');
     
-    const cashTotal = cashNovelas.reduce((sum, n) => sum + (n.capitulos * 5), 0);
-    const transferBaseTotal = transferNovelas.reduce((sum, n) => sum + (n.capitulos * 5), 0);
+    const cashTotal = cashNovelas.reduce((sum, n) => sum + (n.capitulos * novelPricePerChapter), 0);
+    const transferBaseTotal = transferNovelas.reduce((sum, n) => sum + (n.capitulos * novelPricePerChapter), 0);
     const transferFee = Math.round(transferBaseTotal * 0.1);
     const transferTotal = transferBaseTotal + transferFee;
     
@@ -199,7 +215,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
   const generateNovelListText = () => {
     let listText = "📚 CATÁLOGO DE NOVELAS DISPONIBLES\n";
     listText += "TV a la Carta - Novelas Completas\n\n";
-    listText += "💰 Precio: $5 CUP por capítulo\n";
+    listText += `💰 Precio: $${novelPricePerChapter} CUP por capítulo\n`;
     listText += "📱 Contacto: +5354690878\n\n";
     listText += "═══════════════════════════════════\n\n";
     
@@ -207,8 +223,8 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
     listText += "💵 PRECIOS EN EFECTIVO:\n";
     listText += "═══════════════════════════════════\n\n";
     
-    novelas.forEach((novela, index) => {
-      const baseCost = novela.capitulos * 5;
+    allNovelas.forEach((novela, index) => {
+      const baseCost = novela.capitulos * novelPricePerChapter;
       listText += `${index + 1}. ${novela.titulo}\n`;
       listText += `   📺 Género: ${novela.genero}\n`;
       listText += `   📊 Capítulos: ${novela.capitulos}\n`;
@@ -219,8 +235,8 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
     listText += "\n🏦 PRECIOS CON TRANSFERENCIA BANCARIA (+10%):\n";
     listText += "═══════════════════════════════════\n\n";
     
-    novelas.forEach((novela, index) => {
-      const baseCost = novela.capitulos * 5;
+    allNovelas.forEach((novela, index) => {
+      const baseCost = novela.capitulos * novelPricePerChapter;
       const transferCost = Math.round(baseCost * 1.1);
       const recargo = transferCost - baseCost;
       listText += `${index + 1}. ${novela.titulo}\n`;
@@ -235,12 +251,12 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
     listText += "\n📊 RESUMEN DE COSTOS:\n";
     listText += "═══════════════════════════════════\n\n";
     
-    const totalCapitulos = novelas.reduce((sum, novela) => sum + novela.capitulos, 0);
-    const totalEfectivo = novelas.reduce((sum, novela) => sum + (novela.capitulos * 5), 0);
-    const totalTransferencia = novelas.reduce((sum, novela) => sum + Math.round((novela.capitulos * 5) * 1.1), 0);
+    const totalCapitulos = allNovelas.reduce((sum, novela) => sum + novela.capitulos, 0);
+    const totalEfectivo = allNovelas.reduce((sum, novela) => sum + (novela.capitulos * novelPricePerChapter), 0);
+    const totalTransferencia = allNovelas.reduce((sum, novela) => sum + Math.round((novela.capitulos * novelPricePerChapter) * 1.1), 0);
     const totalRecargo = totalTransferencia - totalEfectivo;
     
-    listText += `📊 Total de novelas: ${novelas.length}\n`;
+    listText += `📊 Total de novelas: ${allNovelas.length}\n`;
     listText += `📊 Total de capítulos: ${totalCapitulos.toLocaleString()}\n\n`;
     listText += `💵 CATÁLOGO COMPLETO EN EFECTIVO:\n`;
     listText += `   💰 Costo total: $${totalEfectivo.toLocaleString()} CUP\n\n`;
@@ -531,7 +547,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
                   {/* Botón limpiar filtros y contador de resultados */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
                     <div className="text-sm text-purple-700">
-                      Mostrando {filteredNovelas.length} de {novelas.length} novelas
+                      Mostrando {filteredNovelas.length} de {allNovelas.length} novelas
                       {(searchTerm || selectedGenre || selectedYear) && (
                         <span className="ml-2 text-purple-600">• Filtros activos</span>
                       )}
@@ -616,7 +632,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
                     {filteredNovelas.length > 0 ? (
                       filteredNovelas.map((novela) => {
                       const isSelected = selectedNovelas.includes(novela.id);
-                      const baseCost = novela.capitulos * 5;
+                      const baseCost = novela.capitulos * novelPricePerChapter;
                       const transferCost = Math.round(baseCost * 1.1);
                       const finalCost = novela.paymentType === 'transfer' ? transferCost : baseCost;
                       
@@ -697,7 +713,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
                                     </div>
                                   )}
                                   <div className="text-xs text-gray-500 mt-1">
-                                    $5 CUP × {novela.capitulos} cap.
+                                    $${novelPricePerChapter} CUP × {novela.capitulos} cap.
                                   </div>
                                 </div>
                               </div>

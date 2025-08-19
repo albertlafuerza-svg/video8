@@ -1,5 +1,6 @@
 import React from 'react';
 import { DollarSign, Tv, Film, Star, CreditCard } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
 
 interface PriceCardProps {
   type: 'movie' | 'tv';
@@ -9,21 +10,28 @@ interface PriceCardProps {
 }
 
 export function PriceCard({ type, selectedSeasons = [], episodeCount = 0, isAnime = false }: PriceCardProps) {
+  const adminContext = React.useContext(require('../context/AdminContext').AdminContext);
+  
+  // Get prices from admin context if available
+  const moviePrice = adminContext?.state?.prices?.moviePrice || 80;
+  const seriesPrice = adminContext?.state?.prices?.seriesPrice || 300;
+  const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
+  
   const calculatePrice = () => {
     if (type === 'movie') {
-      return 80; // Películas: $80 CUP
+      return moviePrice;
     } else {
-      // Series: $300 CUP por temporada
+      // Series: precio dinámico por temporada
       if (isAnime) {
-        return selectedSeasons.length * 300; // Anime por temporada
+        return selectedSeasons.length * seriesPrice;
       } else {
-        return selectedSeasons.length * 300;
+        return selectedSeasons.length * seriesPrice;
       }
     }
   };
 
   const price = calculatePrice();
-  const transferPrice = Math.round(price * 1.1); // Precio con recargo del 10%
+  const transferPrice = Math.round(price * (1 + transferFeePercentage / 100));
   
   const getIcon = () => {
     if (type === 'movie') {
