@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { X, User, MapPin, Phone, Copy, Check, MessageCircle, Calculator, DollarSign, CreditCard } from 'lucide-react';
 import { AdminContext } from '../context/AdminContext';
 
+// Base delivery zones with default option
+const BASE_DELIVERY_ZONES = {
+  'Por favor seleccionar su Barrio/Zona': 0,
+};
+
 export interface CustomerInfo {
   fullName: string;
   phone: string;
@@ -29,10 +34,6 @@ interface CheckoutModalProps {
   total: number;
 }
 
-// Base delivery zones - these will be combined with admin zones
-const BASE_DELIVERY_ZONES = {
-  'Por favor seleccionar su Barrio/Zona': 0,
-};
 
 export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: CheckoutModalProps) {
   const adminContext = React.useContext(AdminContext);
@@ -51,9 +52,7 @@ export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: Che
   // Get delivery zones from admin context with real-time updates
   const adminZones = adminContext?.state?.deliveryZones || [];
   const adminZonesMap = adminZones.reduce((acc, zone) => {
-    if (zone.active) {
-      acc[zone.name] = zone.cost;
-    }
+    acc[zone.name] = zone.cost;
     return acc;
   }, {} as { [key: string]: number });
   

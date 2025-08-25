@@ -33,21 +33,15 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
   const novelPricePerChapter = adminContext?.state?.prices?.novelPricePerChapter || 5;
   const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
   
-  // Base novels list
-  const defaultNovelas: Novela[] = [
-  ];
-
-  // Combine admin novels with default novels - real-time sync
-  const allNovelas = [...adminNovels.map(novel => ({
+  // Use only admin novels - real-time sync from AdminContext
+  const allNovelas = adminNovels.map(novel => ({
     id: novel.id,
     titulo: novel.titulo,
     genero: novel.genero,
     capitulos: novel.capitulos,
     año: novel.año,
     descripcion: novel.descripcion
-  })), ...defaultNovelas.filter(defaultNovel => 
-    !adminNovels.some(adminNovel => adminNovel.titulo === defaultNovel.titulo)
-  )];
+  }));
 
   const phoneNumber = '+5354690878';
 
