@@ -11,27 +11,23 @@ interface PriceCardProps {
 
 export function PriceCard({ type, selectedSeasons = [], episodeCount = 0, isAnime = false }: PriceCardProps) {
   const adminContext = React.useContext(AdminContext);
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   
   // Get prices from admin context with real-time updates
   const moviePrice = adminContext?.state?.prices?.moviePrice || 80;
   const seriesPrice = adminContext?.state?.prices?.seriesPrice || 300;
   const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
-
-  // Listen for real-time price updates
+  
+  // Listen for real-time price changes
   React.useEffect(() => {
-    const handleAdminStateChange = (event: CustomEvent) => {
-      const { type } = event.detail;
-      if (type === 'prices') {
-        forceUpdate();
+    const handleAdminChange = (event: CustomEvent) => {
+      if (event.detail.type === 'prices') {
+        // Force component re-render to pick up new prices
+        window.location.reload();
       }
     };
 
-    window.addEventListener('admin_state_change', handleAdminStateChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('admin_state_change', handleAdminStateChange as EventListener);
-    };
+    window.addEventListener('admin_state_change', handleAdminChange as EventListener);
+    return () => window.removeEventListener('admin_state_change', handleAdminChange as EventListener);
   }, []);
   
   const calculatePrice = () => {
