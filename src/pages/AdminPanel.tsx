@@ -624,12 +624,20 @@ export function AdminPanel() {
                   <button
                     onClick={() => startEditZone(zone)}
                     className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar zona"
                   >
                     <Edit3 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => deleteDeliveryZone(zone.id)}
                     className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar zona"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (window.confirm(`¿Estás seguro de que deseas eliminar la zona "${zone.name}"? Esta acción no se puede deshacer.`)) {
+                        deleteDeliveryZone(zone.id);
+                      }
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -800,12 +808,20 @@ export function AdminPanel() {
                   <button
                     onClick={() => startEditNovel(novel)}
                     className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar novela"
                   >
                     <Edit3 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => deleteNovel(novel.id)}
                     className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar novela"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (window.confirm(`¿Estás seguro de que deseas eliminar la novela "${novel.titulo}"? Esta acción no se puede deshacer.`)) {
+                        deleteNovel(novel.id);
+                      }
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -860,14 +876,30 @@ export function AdminPanel() {
             <div className="text-center">
               <h4 className="text-xl font-bold text-gray-900 mb-4">Exportar Sistema Completo</h4>
               <p className="text-gray-600 mb-6">
-                Exporta todos los archivos del sistema con las configuraciones actuales sincronizadas
+                Exporta todos los archivos del sistema con las configuraciones actuales sincronizadas en tiempo real
               </p>
+              <div className="bg-white rounded-lg p-4 mb-4 border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                  <div className="text-center">
+                    <div className="font-semibold text-indigo-600">{state.prices.moviePrice} CUP</div>
+                    <div className="text-gray-600">Precio Película</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-purple-600">{state.deliveryZones.length}</div>
+                    <div className="text-gray-600">Zonas Activas</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-pink-600">{state.novels.length}</div>
+                    <div className="text-gray-600">Novelas</div>
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={exportSystemBackup}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center space-x-3 mx-auto"
               >
                 <Download className="h-6 w-6" />
-                <span>Exportar Sistema</span>
+                <span>Exportar Sistema Sincronizado</span>
               </button>
             </div>
           </div>
@@ -945,11 +977,18 @@ export function AdminPanel() {
                       {new Date(notification.timestamp).toLocaleString('es-ES')}
                     </span>
                   </div>
+                    <p className="text-blue-700">• Novela (por cap.): ${priceForm.novelPricePerChapter} CUP</p>
                   <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
                   <div className="flex items-center mt-2 space-x-4">
                     <span className="text-xs text-gray-500">Sección: {notification.section}</span>
                     <span className="text-xs text-gray-500">Acción: {notification.action}</span>
+                    <p className="text-blue-700">• Recargo: +{priceForm.transferFeePercentage}%</p>
                   </div>
+                </div>
+                <div className="mt-3 p-2 bg-green-100 rounded-lg border border-green-300">
+                  <p className="text-green-800 text-xs font-medium text-center">
+                    ✅ Los cambios se aplicarán instantáneamente en toda la aplicación
+                  </p>
                 </div>
               </div>
             </div>

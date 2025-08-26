@@ -29,7 +29,7 @@ export function NovelasModal({ isOpen, onClose }: NovelasModalProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Get novels and prices from admin context with real-time updates
-  const adminNovels = adminContext?.state?.novels || [];
+  const adminNovels = (adminContext?.state?.novels || []).filter(novel => novel.active);
   const novelPricePerChapter = adminContext?.state?.prices?.novelPricePerChapter || 5;
   const transferFeePercentage = adminContext?.state?.prices?.transferFeePercentage || 10;
   

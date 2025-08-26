@@ -141,6 +141,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const handleAdminStateChange = (event: CustomEvent) => {
+      const { type, data } = event.detail;
+      
+      // Force cart recalculation when prices change
+      if (type === 'prices') {
+        // Trigger a re-render to update all price calculations
+        dispatch({ type: 'LOAD_CART', payload: state.items });
+      }
+    };
+
+    window.addEventListener('admin_state_change', handleAdminStateChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('admin_state_change', handleAdminStateChange as EventListener);
+    };
+  }, [state.items]);
+
+  useEffect(() => {
     localStorage.setItem('movieCart', JSON.stringify(state.items));
   }, [state.items]);
 
