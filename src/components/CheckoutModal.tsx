@@ -73,14 +73,27 @@ export function CheckoutModal({ isOpen, onClose, onCheckout, items, total }: Che
   // Get delivery zones from admin context with real-time updates
   const adminZones = adminContext?.state?.deliveryZones || [];
   const adminZonesMap = adminZones.reduce((acc, zone) => {
-    if (zone.active) {
-      acc[zone.name] = zone.cost;
-    }
+    acc[zone.name] = zone.cost;
     return acc;
   }, {} as { [key: string]: number });
   
   // Combine admin zones with base zones - real-time sync
   const allZones = { ...BASE_DELIVERY_ZONES, ...adminZonesMap };
+  
+  // Listen for real-time admin changes
+  React.useEffect(() => {
+    const handleAdminChange = (event: CustomEvent) => {
+      if (event.detail.type === 'delivery_zone_add' || 
+          event.detail.type === 'delivery_zone_update' || 
+          event.detail.type === 'delivery_zone_delete') {
+        // Force component re-render to pick up new zones
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('admin_state_change', handleAdminChange as EventListener);
+    return () => window.removeEventListener('admin_state_change', handleAdminChange as EventListener);
+  }, []);
   const deliveryCost = allZones[deliveryZone as keyof typeof allZones] || 0;
   const finalTotal = total + deliveryCost;
 
