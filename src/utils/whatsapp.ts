@@ -1,5 +1,33 @@
 import { OrderData, CustomerInfo } from '../components/CheckoutModal';
 
+// Validador de números de teléfono cubanos
+export function validateCubanPhoneNumber(phone: string): boolean {
+  // Limpiar el número de espacios y caracteres especiales
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Patrones para números cubanos
+  const patterns = [
+    /^(\+53|53)?[5-9]\d{7}$/, // Móviles: 5xxxxxxx, 6xxxxxxx, 7xxxxxxx, 8xxxxxxx, 9xxxxxxx
+    /^(\+53|53)?[2-4]\d{6,7}$/, // Fijos: 2xxxxxxx, 3xxxxxxx, 4xxxxxxx (7-8 dígitos)
+    /^(\+53|53)?7[0-9]\d{6}$/, // Números especiales que empiezan con 7
+  ];
+  
+  return patterns.some(pattern => pattern.test(cleanPhone));
+}
+
+// Formatear número de teléfono cubano
+export function formatCubanPhoneNumber(phone: string): string {
+  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  
+  // Si ya tiene código de país, devolverlo tal como está
+  if (cleanPhone.startsWith('+53') || cleanPhone.startsWith('53')) {
+    return cleanPhone.startsWith('+53') ? cleanPhone : `+${cleanPhone}`;
+  }
+  
+  // Agregar código de país si no lo tiene
+  return `+53${cleanPhone}`;
+}
+
 export function sendOrderToWhatsApp(orderData: OrderData): void {
   const { 
     orderId, 
@@ -90,8 +118,8 @@ export function sendOrderToWhatsApp(orderData: OrderData): void {
   
   message += `👤 *DATOS DEL CLIENTE:*\n`;
   message += `• Nombre: ${customerInfo.fullName}\n`;
-  message += `• Teléfono: ${customerInfo.phone}\n`;
-  if (!pickupLocation) {
+  message += `• Teléfono: ${formatCubanPhoneNumber(customerInfo.phone)}\n`;
+  if (!pickupLocation && customerInfo.address) {
     message += `• Dirección: ${customerInfo.address}\n`;
   }
   message += `\n`;
@@ -158,7 +186,9 @@ export function sendOrderToWhatsApp(orderData: OrderData): void {
   } else {
     message += `🚚 *ENTREGA A DOMICILIO:*\n`;
     message += `• Zona: ${deliveryZone.replace(' > ', ' → ')}\n`;
-    message += `• Dirección: ${customerInfo.address}\n`;
+    if (customerInfo.address) {
+      message += `• Dirección: ${customerInfo.address}\n`;
+    }
     message += `• Costo de entrega: $${deliveryCost.toLocaleString()} CUP\n`;
   }
   
