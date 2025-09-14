@@ -26,8 +26,7 @@ type CartAction =
   | { type: 'UPDATE_SEASONS'; payload: { id: number; seasons: number[] } }
   | { type: 'UPDATE_PAYMENT_TYPE'; payload: { id: number; paymentType: 'cash' | 'transfer' } }
   | { type: 'CLEAR_CART' }
-  | { type: 'LOAD_CART'; payload: SeriesCartItem[] }
-  | { type: 'UPDATE_PRICES'; payload: any };
+  | { type: 'LOAD_CART'; payload: SeriesCartItem[] };
 
 interface CartContextType {
   state: CartState;
@@ -42,7 +41,6 @@ interface CartContextType {
   calculateItemPrice: (item: SeriesCartItem) => number;
   calculateTotalPrice: () => number;
   calculateTotalByPaymentType: () => { cash: number; transfer: number };
-  currentPrices: any;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -92,8 +90,6 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         items: action.payload,
         total: action.payload.length
       };
-    case 'UPDATE_PRICES':
-      return state; // Prices are handled separately
     default:
       return state;
   }
@@ -101,44 +97,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [], total: 0 });
-  const [currentPrices, setCurrentPrices] = React.useState(EMBEDDED_PRICES);
   const [toast, setToast] = React.useState<{
     message: string;
     type: 'success' | 'error';
     isVisible: boolean;
   }>({ message: '', type: 'success', isVisible: false });
-
-  // Listen for price updates from admin panel
-  useEffect(() => {
-    const handlePricesUpdate = (event: CustomEvent) => {
-      setCurrentPrices(prev => ({ ...prev, ...event.detail }));
-    };
-
-    window.addEventListener('admin_prices_updated', handlePricesUpdate as EventListener);
-    
-    // Also check localStorage for updates
-    const checkForUpdates = () => {
-      try {
-        const adminState = localStorage.getItem('admin_system_state');
-        if (adminState) {
-          const adminStateData = JSON.parse(adminState);
-          if (adminStateData.prices) {
-            setCurrentPrices(prev => ({ ...prev, ...adminStateData.prices }));
-          }
-        }
-      } catch (error) {
-        console.error('Error loading prices:', error);
-      }
-    };
-
-    checkForUpdates();
-    const interval = setInterval(checkForUpdates, 5000);
-
-    return () => {
-      window.removeEventListener('admin_prices_updated', handlePricesUpdate as EventListener);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Clear cart on page refresh
   useEffect(() => {
@@ -242,10 +205,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const calculateItemPrice = (item: SeriesCartItem): number => {
-    // Use current prices from state
-    const moviePrice = currentPrices.moviePrice;
-    const seriesPrice = currentPrices.seriesPrice;
-    const transferFeePercentage = currentPrices.transferFeePercentage;
+    // Use embedded prices
+    const moviePrice = EMBEDDED_PRICES.moviePrice;
+    const seriesPrice = EMBEDDED_PRICES.seriesPrice;
+    const transferFeePercentage = EMBEDDED_PRICES.transferFeePercentage;
     
     if (item.type === 'movie') {
       const basePrice = moviePrice;
@@ -264,9 +227,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const calculateTotalByPaymentType = (): { cash: number; transfer: number } => {
-    const moviePrice = currentPrices.moviePrice;
-    const seriesPrice = currentPrices.seriesPrice;
-    const transferFeePercentage = currentPrices.transferFeePercentage;
+    const moviePrice = EMBEDDED_PRICES.moviePrice;
+    const seriesPrice = EMBEDDED_PRICES.seriesPrice;
+    const transferFeePercentage = EMBEDDED_PRICES.transferFeePercentage;
     
     return state.items.reduce((totals, item) => {
       const basePrice = item.type === 'movie' ? moviePrice : (item.selectedSeasons?.length || 1) * seriesPrice;
@@ -296,8 +259,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       getItemPaymentType,
       calculateItemPrice,
       calculateTotalPrice,
-      calculateTotalByPaymentType,
-      currentPrices
+      calculateTotalByPaymentType
     }}>
       {children}
       <Toast
