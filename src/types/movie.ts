@@ -149,6 +149,9 @@ export interface NovelCartItem {
   chapters: number;
   year: number;
   description?: string;
+  country?: string;
+  status?: 'transmision' | 'finalizada';
+  image?: string;
   paymentType: 'cash' | 'transfer';
   pricePerChapter: number;
   totalPrice: number;

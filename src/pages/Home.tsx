@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, TrendingUp, Star, Monitor, Filter, Calendar, Clock, Flame, Library, Play, Clapperboard, Sparkles } from 'lucide-react';
 import { tmdbService } from '../services/tmdb';
+import { useAdmin } from '../context/AdminContext';
 import { MovieCard } from '../components/MovieCard';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -12,10 +13,12 @@ import type { Movie, TVShow } from '../types/movie';
 type TrendingTimeWindow = 'day' | 'week';
 
 export function Home() {
+  const { state: adminState } = useAdmin();
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [popularTVShows, setPopularTVShows] = useState<TVShow[]>([]);
   const [popularAnime, setPopularAnime] = useState<TVShow[]>([]);
   const [trendingContent, setTrendingContent] = useState<(Movie | TVShow)[]>([]);
+  const [novelTrendingContent, setNovelTrendingContent] = useState<any[]>([]);
   const [heroItems, setHeroItems] = useState<(Movie | TVShow)[]>([]);
   const [trendingTimeWindow, setTrendingTimeWindow] = useState<TrendingTimeWindow>('day');
   const [loading, setLoading] = useState(true);
@@ -33,9 +36,26 @@ export function Home() {
       const response = await tmdbService.getTrendingAll(timeWindow, 1);
       const uniqueContent = tmdbService.removeDuplicates(response.results);
       setTrendingContent(uniqueContent.slice(0, 12));
+      
+      // Add novels to trending based on time window
+      const novelTrending = getNovelTrendingContent(timeWindow);
+      setNovelTrendingContent(novelTrending);
+      
       setLastUpdate(new Date());
     } catch (err) {
       console.error('Error fetching trending content:', err);
+    }
+  };
+  
+  const getNovelTrendingContent = (timeWindow: TrendingTimeWindow) => {
+    const novels = adminState.novels || [];
+    
+    if (timeWindow === 'day') {
+      // Show novels currently airing
+      return novels.filter(novel => novel.estado === 'transmision').slice(0, 6);
+    } else {
+      // Show recently finished novels
+      return novels.filter(novel => novel.estado === 'finalizada').slice(0, 6);
     }
   };
 
@@ -225,6 +245,7 @@ export function Home() {
             </div>
           </div>
           
+          {/* Movies and TV Shows */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {trendingContent.map((item) => {
               const itemType = 'title' in item ? 'movie' : 'tv';
@@ -233,6 +254,82 @@ export function Home() {
               );
             })}
           </div>
+          
+          {/* Novels Trending Section */}
+          {novelTrendingContent.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <Library className="mr-2 h-5 w-5 text-pink-500" />
+                Novelas {trendingTimeWindow === 'day' ? 'En Transmisión' : 'Finalizadas'}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {novelTrendingContent.map((novel) => (
+                  <div
+                    key={`novel-trending-${novel.id}`}
+                    className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 transform hover:scale-105 border border-gray-200"
+                  >
+                    <div className="relative">
+                      <img
+                        src={novel.imagen || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop'}
+                        alt={novel.titulo}
+                        className="w-full h-48 object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop';
+                        }}
+                      />
+                      <div className="absolute top-2 left-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${
+                          novel.estado === 'transmision' ? 'bg-red-500' : 'bg-green-500'
+                        }`}>
+                          {novel.estado === 'transmision' ? '📡 LIVE' : '✅ COMPLETA'}
+                        </span>
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                          {novel.pais && (
+                            <>
+                              {novel.pais === 'Turquía' && '🇹🇷'}
+                              {novel.pais === 'México' && '🇲🇽'}
+                              {novel.pais === 'Brasil' && '🇧🇷'}
+                              {novel.pais === 'Colombia' && '🇨🇴'}
+                              {novel.pais === 'Argentina' && '🇦🇷'}
+                              {novel.pais === 'España' && '🇪🇸'}
+                              {novel.pais === 'Estados Unidos' && '🇺🇸'}
+                              {novel.pais === 'Corea del Sur' && '🇰🇷'}
+                              {novel.pais === 'India' && '🇮🇳'}
+                              {!['Turquía', 'México', 'Brasil', 'Colombia', 'Argentina', 'España', 'Estados Unidos', 'Corea del Sur', 'India'].includes(novel.pais) && '🌍'}
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2">{novel.titulo}</h4>
+                      <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                        <span>{novel.genero}</span>
+                        <span>{novel.capitulos} cap.</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-sm font-bold text-purple-600">
+                          ${(novel.capitulos * 5).toLocaleString()} CUP
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-6">
+                <button
+                  onClick={() => setShowNovelasModal(true)}
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center mx-auto"
+                >
+                  <Library className="mr-2 h-5 w-5" />
+                  Ver Catálogo Completo
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Popular Movies */}
