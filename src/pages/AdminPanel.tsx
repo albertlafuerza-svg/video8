@@ -1,48 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
-import { 
-  Settings, 
-  DollarSign, 
-  MapPin, 
-  BookOpen, 
-  Bell, 
-  Download, 
-  Upload, 
-  Sync, 
-  LogOut, 
-  Save, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
-  User, 
-  Lock, 
-  AlertCircle, 
-  CheckCircle, 
-  Info, 
-  X,
-  Smartphone,
-  Globe,
-  Calendar,
-  Monitor,
-  Image,
-  Camera,
-  FileText,
-  Code,
-  Database,
-  Activity,
-  TrendingUp,
-  Users,
-  ShoppingCart,
-  Package,
-  Zap,
-  RefreshCw,
-  Cloud,
-  HardDrive,
-  Wifi,
-  WifiOff
-} from 'lucide-react';
+import { Settings, DollarSign, MapPin, BookOpen, Bell, Download, Upload, FolderSync as Sync, LogOut, Save, Plus, CreditCard as Edit, Trash2, Eye, EyeOff, User, Lock, AlertCircle, CheckCircle, Info, X, Smartphone, Globe, Calendar, Monitor, Image, Camera, FileText, Code, Database, Activity, TrendingUp, Users, ShoppingCart, Package, Zap, RefreshCw, Cloud, HardDrive, Wifi, WifiOff } from 'lucide-react';
 
 export function AdminPanel() {
   const {
