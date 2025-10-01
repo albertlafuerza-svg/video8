@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { adminSyncService } from '../services/adminSync';
+import { systemExportV2Service } from '../services/systemExportV2';
 import type { Novel as SupabaseNovel, DeliveryZone as SupabaseDeliveryZone, Prices as SupabasePrices } from '../services/supabase';
 
 interface Novel {
@@ -605,7 +606,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const exportSystemConfig = async (): Promise<string> => {
-    return await adminSyncService.exportConfiguration();
+    try {
+      const blob = await systemExportV2Service.exportCompleteSystem();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tv-a-la-carta-sistema-completo-v2-${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addNotification('Sistema completo exportado exitosamente', 'success');
+      return 'export_success';
+    } catch (error) {
+      console.error('Error exporting system:', error);
+      addNotification('Error al exportar el sistema', 'error');
+      return 'export_error';
+    }
   };
 
   const importSystemConfig = async (configJson: string): Promise<boolean> => {

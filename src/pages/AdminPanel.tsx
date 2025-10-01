@@ -201,17 +201,8 @@ export function AdminPanel() {
   };
 
   const handleExport = async () => {
-    const config = await exportSystemConfig();
-    const blob = new Blob([config], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `tv-a-la-carta-config-v2-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    addNotification('Configuración v2 exportada correctamente', 'success');
+    addNotification('Exportando sistema completo... Por favor espera', 'info');
+    await exportSystemConfig();
   };
 
   const handleImport = async () => {
@@ -983,7 +974,7 @@ export function AdminPanel() {
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center transition-colors"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Exportar Configuración v2
+                      Exportar Sistema Completo v2 (ZIP)
                     </button>
                     
                     <button
