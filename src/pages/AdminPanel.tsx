@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, DollarSign, MapPin, BookOpen, Bell, Download, Upload, Trash2, CreditCard as Edit, Plus, Save, X, Eye, EyeOff, LogOut, Home, Monitor, Smartphone, Globe, Calendar, Image, Camera, Check, AlertCircle, Info, RefreshCw, Database, FolderSync as Sync, Activity, TrendingUp, Users, ShoppingCart, Clock, Zap, Heart, Star } from 'lucide-react';
+import { Settings, DollarSign, MapPin, BookOpen, Bell, Download, Upload, Trash2, CreditCard as Edit, Plus, Save, X, Eye, EyeOff, LogOut, Home, Monitor, Smartphone, Globe, Calendar, Image, Camera, Check, AlertCircle, Info, RefreshCw, Database, FolderSync as Sync, Activity, TrendingUp, Users, ShoppingCart, Clock, Zap, Heart, Star, PackageOpen } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
+import { generateCompleteSourceCode } from '../utils/sourceCodeGenerator';
 
 interface NovelForm {
   titulo: string;
@@ -41,7 +42,6 @@ export function AdminPanel() {
   } = useAdmin();
 
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'novels' | 'zones' | 'prices' | 'notifications' | 'system'>('novels');
   const [novelForm, setNovelForm] = useState<NovelForm>({
     titulo: '',
@@ -94,9 +94,9 @@ export function AdminPanel() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [state.isAuthenticated]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(loginForm.username, loginForm.password);
+    const success = login(loginForm.username, loginForm.password);
     if (!success) {
       addNotification('Credenciales incorrectas', 'error');
     }
@@ -200,21 +200,52 @@ export function AdminPanel() {
     addNotification('Precios actualizados correctamente', 'success');
   };
 
-  const handleExport = async () => {
-    addNotification('Exportando sistema completo... Por favor espera', 'info');
-    await exportSystemConfig();
+  const handleExport = () => {
+    const config = exportSystemConfig();
+    const blob = new Blob([config], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tv-a-la-carta-config-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    addNotification('Configuración exportada correctamente', 'success');
   };
 
-  const handleImport = async () => {
+  const handleImport = () => {
     if (!importData.trim()) {
       addNotification('Por favor pega la configuración a importar', 'error');
       return;
     }
 
-    const success = await importSystemConfig(importData);
+    const success = importSystemConfig(importData);
     if (success) {
       setImportData('');
       setShowImportModal(false);
+    }
+  };
+
+  const handleFullBackupExport = async () => {
+    try {
+      addNotification('Generando backup completo del sistema...', 'info');
+
+      const fullSystemConfig = {
+        version: state.systemConfig.version,
+        prices: state.prices,
+        deliveryZones: state.deliveryZones,
+        novels: state.novels,
+        settings: state.systemConfig,
+        syncStatus: state.syncStatus,
+        exportDate: new Date().toISOString(),
+      };
+
+      await generateCompleteSourceCode(fullSystemConfig);
+      addNotification('Backup completo generado exitosamente', 'success');
+    } catch (error) {
+      console.error('Error al generar backup completo:', error);
+      addNotification('Error al generar el backup completo', 'error');
     }
   };
 
@@ -263,32 +294,23 @@ export function AdminPanel() {
                 value={loginForm.username}
                 onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autoComplete="username"
+                autoComplete="off"
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Contraseña
               </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoComplete="off"
+                required
+              />
             </div>
             
             <button
@@ -974,9 +996,9 @@ export function AdminPanel() {
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center transition-colors"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Exportar Sistema Completo v2 (ZIP)
+                      Exportar Configuración
                     </button>
-                    
+
                     <button
                       onClick={() => setShowImportModal(true)}
                       className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center justify-center transition-colors"
@@ -984,6 +1006,21 @@ export function AdminPanel() {
                       <Upload className="h-4 w-4 mr-2" />
                       Importar Configuración
                     </button>
+
+                    <button
+                      onClick={handleFullBackupExport}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg flex items-center justify-center transition-colors shadow-lg"
+                    >
+                      <PackageOpen className="h-4 w-4 mr-2" />
+                      Exportar Backup Full
+                    </button>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-amber-800">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        El Backup Full incluye todos los archivos del sistema con la configuración aplicada
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
